@@ -19,22 +19,26 @@ func TestCollectLeafsSimple(t *testing.T) {
 	Contains(t, result, r)
 }
 
-func TestSplit(t *testing.T) {
+func TestRollDirectionVert(t *testing.T) {
 	rnd := rand.New(rand.NewSource(7))
-	root := Node{x: 0, y: 0, width: 10, height: 10}
-	root.Split(*rnd)
+	node := Node{x: 0, y: 0, width: 20, height: 8}
+	result := RollDirection(node, *rnd)
+	Equal(t, result, true)
 
-	Equal(t, root.left, &Node{x: 0, y: 0, width: 10, height: 10})
-	Equal(t, root.right, &Node{x: 0, y: 7, width: 10, height: 3})
 }
 
-func TestSplitDeeper(t *testing.T) {
+func TestRollDirectionHori(t *testing.T) {
 	rnd := rand.New(rand.NewSource(7))
-	root := Node{x: 0, y: 0, width: 10, height: 10}
+	node := Node{x: 0, y: 0, width: 8, height: 20}
+	result := RollDirection(node, *rnd)
+	Equal(t, result, true)
+}
+
+func TestSplit(t *testing.T) {
+	rnd := rand.New(rand.NewSource(7))
+	root := Node{x: 0, y: 0, width: 20, height: 20}
 	root.Split(*rnd)
-	newRoot := root.left
 
-	newRoot.Split(*rnd)
-	Equal(t, newRoot.left, &Node{x: 0, y: 0, width: 10, height: 7})
-
+	Equal(t, root.left, &Node{x: 0, y: 0, width: 20, height: 5})
+	Equal(t, root.right, &Node{x: 0, y: 5, width: 20, height: 15})
 }
