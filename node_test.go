@@ -19,19 +19,19 @@ func TestCollectLeafsSimple(t *testing.T) {
 	Contains(t, result, r)
 }
 
-func TestRollDirectionVert(t *testing.T) {
+func TestShouldForceVerticalSplitert(t *testing.T) {
 	rnd := rand.New(rand.NewSource(7))
 	node := Node{x: 0, y: 0, width: 20, height: 8}
-	result := RollDirection(node, *rnd)
+	result := ShouldForceVerticalSplit(node, *rnd)
 	Equal(t, result, true)
 
 }
 
-func TestRollDirectionHori(t *testing.T) {
+func TestForceVerticalSplitHori(t *testing.T) {
 	rnd := rand.New(rand.NewSource(7))
 	node := Node{x: 0, y: 0, width: 8, height: 20}
-	result := RollDirection(node, *rnd)
-	Equal(t, result, true)
+	result := ShouldForceVerticalSplit(node, *rnd)
+	Equal(t, result, false)
 }
 
 func TestSplit(t *testing.T) {

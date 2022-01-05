@@ -22,7 +22,7 @@ func (node Node) isLeaf() bool {
 }
 
 func (pNode *Node) Split(rnd rand.Rand) {
-	vert := RollDirection(*pNode, rnd)
+	vert := ShouldForceVerticalSplit(*pNode, rnd)
 	maxSplit := calcMaxSplit(vert, *pNode)
 
 	//Dont Split if already to small
@@ -50,7 +50,7 @@ func calcMaxSplit(splitVertical bool, node Node) int {
 	}
 }
 
-func RollDirection(node Node, rnd rand.Rand) bool {
+func ShouldForceVerticalSplit(node Node, rnd rand.Rand) bool {
 	if node.width > node.height && float64(node.width)/float64(node.height) > 2 {
 		return true
 	} else if node.height > node.width && float64(node.height)/float64(node.width) > 2 {
