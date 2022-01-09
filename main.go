@@ -12,10 +12,10 @@ func main() {
 	rnd := rand.New(rndSource)
 	root := Node{x: 0, y: 0, width: 40, height: 40}
 	root.SplitDeep(*rnd, 4)
+	root.CreateLeafRooms(*rnd)
+	//Connect siblings
 
-	//For each Leaf Node, roll a size and a position for the actual room
-
-	img := root.Render()
+	img := root.RenderRooms()
 	file, _ := os.Create("out.png")
 	png.Encode(file, img)
 }

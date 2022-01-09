@@ -11,10 +11,6 @@ const MIN_NODE_SIZE = 5
 //MIN_ROOM muss immer kleiner sein als MIN NODE!
 const MIN_ROOM_SIZE = 3
 
-type Tree struct {
-	Root *Node
-}
-
 type Node struct {
 	left  *Node
 	right *Node
@@ -29,11 +25,12 @@ type Room struct {
 }
 
 //Create Room elements for all Leaf Nodes
-func (tree Tree) CreateRooms(rnd rand.Rand) {
-	leafs := tree.Root.CollectLeafs()
-
-	for _, leaf := range leafs {
-		leaf.GenerateRoom(rnd)
+func (node *Node) CreateLeafRooms(rnd rand.Rand) {
+	if node.isLeaf() {
+		node.GenerateRoom(rnd)
+	} else {
+		node.left.CreateLeafRooms(rnd)
+		node.right.CreateLeafRooms(rnd)
 	}
 }
 
@@ -100,6 +97,19 @@ func (node *Node) SplitDeep(rnd rand.Rand, depth int) {
 	}
 }
 
+func (node Node) RenderRooms() image.Image {
+	img := image.NewRGBA(image.Rect(0, 0, node.width, node.height))
+
+	leafs := node.CollectLeafs()
+	for _, leaf := range leafs {
+		if leaf.room != nil {
+			paintFilled(img, *leaf.room)
+		}
+	}
+
+	return img
+}
+
 func (node Node) Render() image.Image {
 	img := image.NewRGBA(image.Rect(0, 0, node.width, node.height))
 
@@ -109,6 +119,17 @@ func (node Node) Render() image.Image {
 		outline(img, leaf)
 	}
 	return img
+}
+
+func paintFilled(img *image.RGBA, room Room) {
+	gray := color.RGBA{211, 211, 211, 255}
+	//roomRect := image.Rect(0, 0, room.width, room.height)
+	//draw.Draw(img, roomRect, &image.Uniform{gray}, image.ZP, draw.Src)
+	for i := room.x; i < room.x+room.width; i++ {
+		for j := room.y; j < room.y+room.height; j++ {
+			img.Set(i, j, gray)
+		}
+	}
 }
 
 func outline(img *image.RGBA, node Node) {
@@ -123,8 +144,8 @@ func outline(img *image.RGBA, node Node) {
 	}
 }
 
+//Collect Nodes without further child nodes. Recursion might be implemented in a better way...
 func (node Node) CollectLeafs() []Node {
-
 	if node.isLeaf() {
 		return []Node{node}
 	} else {
