@@ -8,23 +8,23 @@ import (
 
 const MIN_NODE_SIZE = 5
 
-//MIN_ROOM muss immer kleiner sein als MIN NODE!
+// MIN_ROOM muss immer kleiner sein als MIN NODE!
 const MIN_ROOM_SIZE = 3
 
 type Node struct {
-	left  *Node
-	right *Node
-	room  *Room
-	//TODO: Path between left & right (corridor)
+	left                *Node
+	right               *Node
+	room                *Room
+	corridor            *Room
 	x, y, width, height int
 }
 
-//A Rect inside of a node. Only present in Leaf Nodes
+// A Rect inside of a node. Only present in Leaf Nodes
 type Room struct {
 	x, y, width, height int
 }
 
-//Create Room elements for all Leaf Nodes
+// Create Room elements for all Leaf Nodes
 func (node *Node) CreateLeafRooms(rnd rand.Rand) {
 	if node.isLeaf() {
 		node.GenerateRoom(rnd)
@@ -34,13 +34,32 @@ func (node *Node) CreateLeafRooms(rnd rand.Rand) {
 	}
 }
 
-//Generate a random sized Room in the bounds of the Node
+// Generate a random sized Room in the bounds of the Node
 func (node *Node) GenerateRoom(rnd rand.Rand) {
 	roomW := rnd.Intn(node.width-MIN_ROOM_SIZE) + MIN_ROOM_SIZE
 	roomH := rnd.Intn(node.height-MIN_ROOM_SIZE) + MIN_ROOM_SIZE
 	xOffset := rnd.Intn(node.width - roomW)
 	yOffset := rnd.Intn(node.height - roomH)
 	node.room = &Room{node.x + xOffset, node.y + yOffset, roomW, roomH}
+}
+
+func (node *Node) ConnectLeafs(rnd rand.Rand) {
+	if !node.isLeaf() {
+		if node.left.isLeaf() && node.right.isLeaf() {
+			//Roll place for path, mind vertial or horizontal
+			//Create room
+		} else {
+			node.left.ConnectLeafs(rnd)
+			node.right.ConnectLeafs(rnd)
+		}
+	}
+}
+
+func (node Node) IsSplitHorizontal() bool {
+	if node.isLeaf() {
+		panic("is not split. ")
+	}
+	return node.left.x == node.right.x
 }
 
 func (node Node) isLeaf() bool {
@@ -123,8 +142,6 @@ func (node Node) Render() image.Image {
 
 func paintFilled(img *image.RGBA, room Room) {
 	gray := color.RGBA{211, 211, 211, 255}
-	//roomRect := image.Rect(0, 0, room.width, room.height)
-	//draw.Draw(img, roomRect, &image.Uniform{gray}, image.ZP, draw.Src)
 	for i := room.x; i < room.x+room.width; i++ {
 		for j := room.y; j < room.y+room.height; j++ {
 			img.Set(i, j, gray)
@@ -144,7 +161,7 @@ func outline(img *image.RGBA, node Node) {
 	}
 }
 
-//Collect Nodes without further child nodes. Recursion might be implemented in a better way...
+// Collect Nodes without further child nodes. Recursion might be implemented in a better way...
 func (node Node) CollectLeafs() []Node {
 	if node.isLeaf() {
 		return []Node{node}
