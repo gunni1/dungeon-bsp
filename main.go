@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	dbsp "gunni1/dungeon-bsp/dbsp"
 	"image/png"
 	"math/rand"
 	"os"
@@ -20,7 +21,7 @@ func main() {
 	flag.IntVar(&depth, "depth", 4, "Number of splits / depth of binary tree")
 	flag.Parse()
 
-	root := Node{x: 0, y: 0, width: width, height: height}
+	root := dbsp.Node{X: 0, Y: 0, Width: width, Height: height}
 	root.SplitDeep(*rnd, depth)
 	root.CreateLeafRooms(*rnd)
 	//Connect siblings

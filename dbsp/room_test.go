@@ -1,4 +1,4 @@
-package main
+package dbsp
 
 import (
 	"math/rand"
@@ -22,15 +22,15 @@ func createRandomNode(rnd rand.Rand) Node {
 	max := 20
 	width := rnd.Intn(max-min) + min
 	height := rand.Intn(max-min) + min
-	return Node{x: rnd.Intn(max), y: rnd.Intn(max), width: width, height: height}
+	return Node{X: rnd.Intn(max), Y: rnd.Intn(max), Width: width, Height: height}
 }
 
 func isRoomInBounds(t *testing.T, node Node) {
-	room := node.room
+	room := node.Room
 	NotNil(t, room)
-	GreaterOrEqual(t, room.x, node.x)
-	GreaterOrEqual(t, room.y, node.y)
+	GreaterOrEqual(t, room.x, node.X)
+	GreaterOrEqual(t, room.y, node.Y)
 
-	LessOrEqual(t, room.x+room.width, node.x+node.width)
-	LessOrEqual(t, room.y+room.height, node.y+node.height)
+	LessOrEqual(t, room.x+room.width, node.X+node.Width)
+	LessOrEqual(t, room.y+room.height, node.Y+node.Height)
 }

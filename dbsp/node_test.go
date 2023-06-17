@@ -1,4 +1,4 @@
-package main
+package dbsp
 
 import (
 	"math/rand"
@@ -8,9 +8,9 @@ import (
 )
 
 func TestCollectLeafsSimple(t *testing.T) {
-	l := Node{x: 0, y: 0, width: 4, height: 10}
-	r := Node{x: 4, y: 0, width: 6, height: 10}
-	root := Node{x: 0, y: 0, width: 10, height: 10, left: &l, right: &r}
+	l := Node{X: 0, Y: 0, Width: 4, Height: 10}
+	r := Node{X: 4, Y: 0, Width: 6, Height: 10}
+	root := Node{X: 0, Y: 0, Width: 10, Height: 10, Left: &l, Right: &r}
 
 	result := root.CollectLeafs()
 
@@ -21,7 +21,7 @@ func TestCollectLeafsSimple(t *testing.T) {
 
 func TestShouldForceVerticalSplitert(t *testing.T) {
 	rnd := rand.New(rand.NewSource(7))
-	node := Node{x: 0, y: 0, width: 20, height: 8}
+	node := Node{X: 0, Y: 0, Width: 20, Height: 8}
 	result := ShouldForceVerticalSplit(node, *rnd)
 	Equal(t, result, true)
 
@@ -29,16 +29,16 @@ func TestShouldForceVerticalSplitert(t *testing.T) {
 
 func TestForceVerticalSplitHori(t *testing.T) {
 	rnd := rand.New(rand.NewSource(7))
-	node := Node{x: 0, y: 0, width: 8, height: 20}
+	node := Node{X: 0, Y: 0, Width: 8, Height: 20}
 	result := ShouldForceVerticalSplit(node, *rnd)
 	Equal(t, result, false)
 }
 
 func TestSplit(t *testing.T) {
 	rnd := rand.New(rand.NewSource(7))
-	root := Node{x: 0, y: 0, width: 20, height: 20}
+	root := Node{X: 0, Y: 0, Width: 20, Height: 20}
 	root.Split(*rnd)
 
-	Equal(t, root.left, &Node{x: 0, y: 0, width: 20, height: 5})
-	Equal(t, root.right, &Node{x: 0, y: 5, width: 20, height: 15})
+	Equal(t, root.Left, &Node{X: 0, Y: 0, Width: 20, Height: 5})
+	Equal(t, root.Right, &Node{X: 0, Y: 5, Width: 20, Height: 15})
 }
