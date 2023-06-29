@@ -24,7 +24,7 @@ func main() {
 	root := dbsp.Node{X: 0, Y: 0, Width: width, Height: height}
 	root.SplitDeep(*rnd, depth)
 	root.CreateLeafRooms(*rnd)
-	//Connect siblings
+	//TODO: Connect siblings
 
 	img := root.RenderRooms()
 	file, _ := os.Create("out.png")
