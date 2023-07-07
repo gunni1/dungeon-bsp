@@ -6,7 +6,7 @@ import (
 	"math/rand"
 )
 
-const MIN_NODE_SIZE = 5
+const MIN_NODE_SIZE = 10
 
 // MIN_ROOM muss immer kleiner sein als MIN NODE!
 const MIN_ROOM_SIZE = 3
@@ -95,6 +95,7 @@ func calcMaxSplit(splitVertical bool, node Node) int {
 	}
 }
 
+// ????
 func ShouldForceVerticalSplit(node Node, rnd rand.Rand) bool {
 	if node.Width > node.Height && float64(node.Width)/float64(node.Height) > 1.5 {
 		return true
@@ -125,15 +126,12 @@ func (node Node) RenderRooms() image.Image {
 			paintFilled(img, *leaf.Room)
 		}
 	}
-
 	return img
 }
 
-func (node Node) Render() image.Image {
+func (node Node) RenderNode() image.Image {
 	img := image.NewRGBA(image.Rect(0, 0, node.Width, node.Height))
-
 	leafs := node.CollectLeafs()
-
 	for _, leaf := range leafs {
 		outline(img, leaf)
 	}

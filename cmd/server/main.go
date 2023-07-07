@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
-	"fmt"
 	dbsp "gunni1/dungeon-bsp/dbsp"
 	"html/template"
 	"image"
@@ -17,14 +16,19 @@ import (
 
 var ImageTemplate string = `<!DOCTYPE html>
     <html lang="en"><head></head>
-    <body><img src="data:image/png;base64,{{.Image}}"></body>`
+    <body>
+	  <img src="data:image/png;base64,{{.Image}}">
+	  <table>
+	    <tbody><tr><td>seed</td><td>{{.Seed}}</td></tr></tbody>
+	  </table>
+	</body>
+	`
 
 func main() {
 
 	http.HandleFunc("/map", func(w http.ResponseWriter, r *http.Request) {
 		seed, err := parseSeed(r)
 		if err != nil {
-			fmt.Println("No seed found. Default to current time.")
 			seed = time.Now().UnixNano()
 		}
 		width := asInt(r.URL.Query().Get("width"))
@@ -39,12 +43,14 @@ func main() {
 		//TODO: Connect siblings
 
 		img := root.RenderRooms()
-		writeImageWithTemplate(w, &img)
+
+		data := map[string]interface{}{"Seed": seed}
+		writeImageWithTemplate(w, &img, data)
 	})
 	http.ListenAndServe(":8080", nil)
 }
 
-func writeImageWithTemplate(w http.ResponseWriter, img *image.Image) {
+func writeImageWithTemplate(w http.ResponseWriter, img *image.Image, data map[string]interface{}) {
 	buffer := new(bytes.Buffer)
 	if err := png.Encode(buffer, *img); err != nil {
 		log.Println("unable to encode image.")
@@ -54,7 +60,7 @@ func writeImageWithTemplate(w http.ResponseWriter, img *image.Image) {
 	if tmpl, err := template.New("image").Parse(ImageTemplate); err != nil {
 		log.Println("unable to parse image template.")
 	} else {
-		data := map[string]interface{}{"Image": encodedImage}
+		data["Image"] = encodedImage
 		if err = tmpl.Execute(w, data); err != nil {
 			log.Println("unable to execute template.")
 		}
