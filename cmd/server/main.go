@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
+	"fmt"
 	dbsp "gunni1/dungeon-bsp/dbsp"
 	"html/template"
 	"image"
@@ -19,14 +20,19 @@ var ImageTemplate string = `<!DOCTYPE html>
     <body><img src="data:image/png;base64,{{.Image}}"></body>`
 
 func main() {
-	rndSource := rand.NewSource(time.Now().UnixNano())
-	rnd := rand.New(rndSource)
 
 	http.HandleFunc("/map", func(w http.ResponseWriter, r *http.Request) {
-
+		seed, err := parseSeed(r)
+		if err != nil {
+			fmt.Println("No seed found. Default to current time.")
+			seed = time.Now().UnixNano()
+		}
 		width := asInt(r.URL.Query().Get("width"))
 		height := asInt(r.URL.Query().Get("height"))
 		depth := asInt(r.URL.Query().Get("depth"))
+
+		rndSource := rand.NewSource(seed)
+		rnd := rand.New(rndSource)
 		root := dbsp.Node{X: 0, Y: 0, Width: width, Height: height}
 		root.SplitDeep(*rnd, depth)
 		root.CreateLeafRooms(*rnd)
@@ -61,4 +67,9 @@ func asInt(value string) int {
 		panic(err)
 	}
 	return intVal
+}
+
+func parseSeed(r *http.Request) (int64, error) {
+	seedParam := r.URL.Query().Get("seed")
+	return strconv.ParseInt(seedParam, 10, 64)
 }
