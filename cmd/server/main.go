@@ -34,6 +34,7 @@ func main() {
 		width := asInt(r.URL.Query().Get("width"))
 		height := asInt(r.URL.Query().Get("height"))
 		depth := asInt(r.URL.Query().Get("depth"))
+		//FIXME: error handling on missing input parameters
 
 		rndSource := rand.NewSource(seed)
 		rnd := rand.New(rndSource)
@@ -42,6 +43,7 @@ func main() {
 		root.CreateLeafRooms(*rnd)
 		//TODO: Connect siblings
 
+		//img := root.RenderNode()
 		img := root.RenderRooms()
 
 		data := map[string]interface{}{"Seed": seed}
