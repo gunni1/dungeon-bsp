@@ -6,9 +6,8 @@ import (
 	"math/rand"
 )
 
+// MIN_ROOM must be smaller than MIN NODE!
 const MIN_NODE_SIZE = 10
-
-// MIN_ROOM muss immer kleiner sein als MIN NODE!
 const MIN_ROOM_SIZE = 3
 
 type Node struct {
@@ -76,7 +75,7 @@ func (pNode *Node) Split(rnd rand.Rand) {
 	}
 	split := rnd.Intn(maxSplit-MIN_NODE_SIZE) + MIN_NODE_SIZE
 	if vert {
-		//Vertikal split |
+		//Vertical split |
 		pNode.Left = &Node{X: pNode.X, Y: pNode.Y, Width: split, Height: pNode.Height}
 		pNode.Right = &Node{X: pNode.X + split, Y: pNode.Y, Width: pNode.Width - split, Height: pNode.Height}
 
@@ -95,7 +94,8 @@ func calcMaxSplit(splitVertical bool, node Node) int {
 	}
 }
 
-// ????
+// Determine split direction based on nodes ratio.
+// If ratio is not significant, toss a coin.
 func ShouldForceVerticalSplit(node Node, rnd rand.Rand) bool {
 	if node.Width > node.Height && float64(node.Width)/float64(node.Height) > 1.5 {
 		return true
@@ -109,7 +109,7 @@ func ShouldForceVerticalSplit(node Node, rnd rand.Rand) bool {
 func (node *Node) SplitDeep(rnd rand.Rand, depth int) {
 	if depth > 0 {
 		node.Split(rnd)
-		//FIXME: Nicht immer splitten für mehr Variabilität?
+		//FIXME: Do not always split for more variability
 		if node.Left != nil && node.Right != nil {
 			node.Left.SplitDeep(rnd, depth-1)
 			node.Right.SplitDeep(rnd, depth-1)

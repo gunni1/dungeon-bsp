@@ -47,7 +47,7 @@ func main() {
 		data := map[string]interface{}{"Seed": seed}
 		writeImageWithTemplate(w, &img, data)
 	})
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":3000", nil)
 }
 
 func writeImageWithTemplate(w http.ResponseWriter, img *image.Image, data map[string]interface{}) {

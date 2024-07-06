@@ -2,6 +2,7 @@
 
 server:
 	go build ./...
+	go test ./...
 	go build -o bin/server cmd/server/main.go
 
 cli:
