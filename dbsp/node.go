@@ -3,12 +3,13 @@ package dbsp
 import (
 	"image"
 	"image/color"
+	"image/color/palette"
 	"math/rand"
 )
 
 // MIN_ROOM must be smaller than MIN NODE!
 const MIN_NODE_SIZE = 10
-const MIN_ROOM_SIZE = 3
+const MIN_ROOM_SIZE = 5
 
 type Node struct {
 	Left                *Node
@@ -21,6 +22,17 @@ type Node struct {
 // A Rect inside of a node. Only present in Leaf Nodes
 type Room struct {
 	x, y, width, height int
+}
+
+// Context to protocol interim results
+type ProtocolCtx struct {
+	InterimResults chan Node
+	RootNode       *Node
+}
+
+// Push the current binary tree to the interim results channel
+func (prtcCtx ProtocolCtx) takeSnapshot() {
+	prtcCtx.InterimResults <- *prtcCtx.RootNode
 }
 
 // Create Room elements for all Leaf Nodes
@@ -106,15 +118,20 @@ func ShouldForceVerticalSplit(node Node, rnd rand.Rand) bool {
 	}
 }
 
-func (node *Node) SplitDeep(rnd rand.Rand, depth int) {
-	if depth > 0 {
+func (node *Node) SplitDeep(rnd rand.Rand, depth int, prtcCtx ProtocolCtx) {
+	prtcCtx.takeSnapshot()
+	if depth > 0 && !skipSplitForVariety(rnd) {
 		node.Split(rnd)
-		//FIXME: Do not always split for more variability
 		if node.Left != nil && node.Right != nil {
-			node.Left.SplitDeep(rnd, depth-1)
-			node.Right.SplitDeep(rnd, depth-1)
+			node.Left.SplitDeep(rnd, depth-1, prtcCtx)
+			node.Right.SplitDeep(rnd, depth-1, prtcCtx)
 		}
 	}
+}
+
+// Return true in 1 out of 10 random cases
+func skipSplitForVariety(rnd rand.Rand) bool {
+	return rnd.Intn(10) == 1
 }
 
 func (node Node) RenderRooms() image.Image {
@@ -138,12 +155,34 @@ func (node Node) RenderNode() image.Image {
 	return img
 }
 
+func (node Node) RenderNodePaletted() image.Image {
+
+	img := image.NewPaletted(image.Rect(0, 0, node.Width, node.Height), palette.WebSafe)
+	leafs := node.CollectLeafs()
+	for _, leaf := range leafs {
+		outlinePaletted(img, leaf)
+	}
+	return img
+}
+
 func paintFilled(img *image.RGBA, room Room) {
 	gray := color.RGBA{211, 211, 211, 255}
 	for i := room.x; i < room.x+room.width; i++ {
 		for j := room.y; j < room.y+room.height; j++ {
 			img.Set(i, j, gray)
 		}
+	}
+}
+
+func outlinePaletted(img *image.Paletted, node Node) {
+	green := color.RGBA{0, 100, 0, 255}
+	for i := node.X; i < node.X+node.Width; i++ {
+		img.Set(i, node.Y, green)
+		img.Set(i, node.Y+node.Height-1, green)
+	}
+	for j := node.Y; j < node.Y+node.Height; j++ {
+		img.Set(node.X, j, green)
+		img.Set(node.X+node.Width-1, j, green)
 	}
 }
 

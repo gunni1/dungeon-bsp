@@ -18,8 +18,8 @@ func TestGenerateRoomAlwaysInBound(t *testing.T) {
 }
 
 func createRandomNode(rnd rand.Rand) Node {
-	min := 5
-	max := 20
+	min := 10
+	max := 40
 	width := rnd.Intn(max-min) + min
 	height := rand.Intn(max-min) + min
 	return Node{X: rnd.Intn(max), Y: rnd.Intn(max), Width: width, Height: height}
