@@ -6,6 +6,7 @@ import (
 	dbsp "gunni1/dungeon-bsp/dbsp"
 	"html/template"
 	"image"
+	"image/gif"
 	"image/png"
 	"log"
 	"math/rand"
@@ -14,13 +15,14 @@ import (
 	"time"
 )
 
-var ImageTemplate string = `<!DOCTYPE html>
+var imagePage string = `<!DOCTYPE html>
     <html lang="en"><head></head>
     <body>
 	  <img src="data:image/png;base64,{{.Image}}">
 	  <table>
 	    <tbody><tr><td>seed</td><td>{{.Seed}}</td></tr></tbody>
 	  </table>
+	  <img src="data:image/gif;base64,{{.BSPGif}}">
 	</body>
 	`
 
@@ -39,34 +41,47 @@ func main() {
 		rndSource := rand.NewSource(seed)
 		rnd := rand.New(rndSource)
 		root := dbsp.Node{X: 0, Y: 0, Width: width, Height: height}
-		root.SplitDeep(*rnd, depth)
-		root.CreateLeafRooms(*rnd)
-		//TODO: Connect siblings
+		prtcCtx := dbsp.ProtocolCtx{InterimResults: make(chan dbsp.Node), RootNode: &root}
 
-		//img := root.RenderNode()
-		img := root.RenderRooms()
+		go func() {
+			root.SplitDeep(*rnd, depth, prtcCtx)
+			root.CreateLeafRooms(*rnd)
+			close(prtcCtx.InterimResults)
+		}()
+
+		//Create result Gif
+		bspGif := gif.GIF{}
+		for result := range prtcCtx.InterimResults {
+			bspGif.Image = append(bspGif.Image, result.RenderNodePaletted().(*image.Paletted))
+			bspGif.Delay = append(bspGif.Delay, 100)
+		}
+
+		roomImg := root.RenderRooms()
 
 		data := map[string]interface{}{"Seed": seed}
-		writeImageWithTemplate(w, &img, data)
+
+		templ := template.Must(template.New("image").Parse(imagePage))
+
+		data["Image"] = encodePngB64(roomImg)
+		data["BSPGif"] = encodeGifB64(&bspGif)
+		if err = templ.Execute(w, data); err != nil {
+			log.Println("unable to execute template")
+		}
 	})
+
 	http.ListenAndServe(":3000", nil)
 }
 
-func writeImageWithTemplate(w http.ResponseWriter, img *image.Image, data map[string]interface{}) {
+func encodeGifB64(input *gif.GIF) string {
 	buffer := new(bytes.Buffer)
-	if err := png.Encode(buffer, *img); err != nil {
-		log.Println("unable to encode image.")
-	}
+	gif.EncodeAll(buffer, input)
+	return base64.StdEncoding.EncodeToString(buffer.Bytes())
+}
 
-	encodedImage := base64.StdEncoding.EncodeToString(buffer.Bytes())
-	if tmpl, err := template.New("image").Parse(ImageTemplate); err != nil {
-		log.Println("unable to parse image template.")
-	} else {
-		data["Image"] = encodedImage
-		if err = tmpl.Execute(w, data); err != nil {
-			log.Println("unable to execute template.")
-		}
-	}
+func encodePngB64(input image.Image) string {
+	buffer := new(bytes.Buffer)
+	png.Encode(buffer, input)
+	return base64.StdEncoding.EncodeToString(buffer.Bytes())
 }
 
 func asInt(value string) int {
