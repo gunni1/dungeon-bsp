@@ -22,9 +22,9 @@ func main() {
 	flag.Parse()
 
 	root := dbsp.Node{X: 0, Y: 0, Width: width, Height: height}
-	interimResults := make(chan dbsp.Node)
+	prtcCtx := dbsp.ProtocolCtx{InterimResults: make(chan dbsp.Node), RootNode: &root}
 
-	root.SplitDeep(*rnd, depth, interimResults)
+	root.SplitDeep(*rnd, depth, prtcCtx)
 	root.CreateLeafRooms(*rnd)
 	//TODO: Connect siblings
 
