@@ -8,12 +8,13 @@ import (
 )
 
 // MIN_ROOM must be smaller than MIN NODE!
-const MIN_NODE_SIZE = 10
-const MIN_ROOM_SIZE = 5
+const MIN_NODE_SIZE = 20 // width/5
+const MIN_ROOM_SIZE = 10 // width/10
 
 type Node struct {
 	Left                *Node
 	Right               *Node
+	Parent              *Node
 	Room                *Room
 	corridor            *Room
 	X, Y, Width, Height int
@@ -35,30 +36,24 @@ func (prtcCtx ProtocolCtx) takeSnapshot() {
 	prtcCtx.InterimResults <- *prtcCtx.RootNode
 }
 
-// Create Room elements for all Leaf Nodes
-func (node *Node) CreateLeafRooms(rnd rand.Rand) {
-	if node.isLeaf() {
-		node.GenerateRoom(rnd)
-	} else {
-		node.Left.CreateLeafRooms(rnd)
-		node.Right.CreateLeafRooms(rnd)
-	}
+func (node *Node) CreateCorridor(rnd rand.Rand) {
+
+	//go through tree until left&right are leafs, collect all these nodes
+	nodesToConnect := node.CollectRoomParentNodes()
+	//connect left & right with a corridor
+	//go one level up and connect rooms+corridor with the other sibling
+
+	//IF hasRooms
+	//-Create Corridor
+	//ELSE IF
 }
 
-// Generate a random sized Room in the bounds of the Node
-func (node *Node) GenerateRoom(rnd rand.Rand) {
-	roomW := rnd.Intn(node.Width-MIN_ROOM_SIZE) + MIN_ROOM_SIZE
-	roomH := rnd.Intn(node.Height-MIN_ROOM_SIZE) + MIN_ROOM_SIZE
-	xOffset := rnd.Intn(node.Width - roomW)
-	yOffset := rnd.Intn(node.Height - roomH)
-	node.Room = &Room{node.X + xOffset, node.Y + yOffset, roomW, roomH}
-}
-
+// OLD
 func (node *Node) ConnectLeafs(rnd rand.Rand) {
 	if !node.isLeaf() {
 		if node.Left.isLeaf() && node.Right.isLeaf() {
 			//Roll place for path, mind vertial or horizontal
-			//Create room
+			//Create corridor
 		} else {
 			node.Left.ConnectLeafs(rnd)
 			node.Right.ConnectLeafs(rnd)
@@ -85,16 +80,17 @@ func (pNode *Node) Split(rnd rand.Rand) {
 	if maxSplit <= MIN_NODE_SIZE {
 		return
 	}
+	//TODO: somehow keep a aspect ratio of
 	split := rnd.Intn(maxSplit-MIN_NODE_SIZE) + MIN_NODE_SIZE
 	if vert {
 		//Vertical split |
-		pNode.Left = &Node{X: pNode.X, Y: pNode.Y, Width: split, Height: pNode.Height}
-		pNode.Right = &Node{X: pNode.X + split, Y: pNode.Y, Width: pNode.Width - split, Height: pNode.Height}
+		pNode.Left = &Node{X: pNode.X, Y: pNode.Y, Width: split, Height: pNode.Height, Parent: pNode}
+		pNode.Right = &Node{X: pNode.X + split, Y: pNode.Y, Width: pNode.Width - split, Height: pNode.Height, Parent: pNode}
 
 	} else {
 		//Horizontal split ---
-		pNode.Left = &Node{X: pNode.X, Y: pNode.Y, Width: pNode.Width, Height: split}
-		pNode.Right = &Node{X: pNode.X, Y: pNode.Y + split, Width: pNode.Width, Height: pNode.Height - split}
+		pNode.Left = &Node{X: pNode.X, Y: pNode.Y, Width: pNode.Width, Height: split, Parent: pNode}
+		pNode.Right = &Node{X: pNode.X, Y: pNode.Y + split, Width: pNode.Width, Height: pNode.Height - split, Parent: pNode}
 	}
 }
 
@@ -132,18 +128,6 @@ func (node *Node) SplitDeep(rnd rand.Rand, depth int, prtcCtx ProtocolCtx) {
 // Return true in 1 out of 10 random cases
 func skipSplitForVariety(rnd rand.Rand) bool {
 	return rnd.Intn(10) == 1
-}
-
-func (node Node) RenderRooms() image.Image {
-	img := image.NewRGBA(image.Rect(0, 0, node.Width, node.Height))
-
-	leafs := node.CollectLeafs()
-	for _, leaf := range leafs {
-		if leaf.Room != nil {
-			paintFilled(img, *leaf.Room)
-		}
-	}
-	return img
 }
 
 func (node Node) RenderNode() image.Image {
@@ -204,5 +188,16 @@ func (node Node) CollectLeafs() []Node {
 		return []Node{node}
 	} else {
 		return append(node.Left.CollectLeafs(), node.Right.CollectLeafs()...)
+	}
+}
+
+// Search the B-Tree for Nodes where there Left and Right have Rooms to connect
+func (node Node) CollectRoomParentNodes() []Node {
+	if node.isLeaf() {
+		return nil
+	} else if node.Left.Room != nil && node.Right.Room != nil {
+		return []Node{node}
+	} else {
+		return append(node.Left.CollectRoomParentNodes(), node.Right.CollectRoomParentNodes()...)
 	}
 }
